@@ -113,6 +113,25 @@ class PokemonParser():
             [abilities.append({'ability': b, 'hidden': False}) for b in bs]
             
         # tr[3]
+        tds = tr[3].find_all("td")
+        # > td[0] - Experience Growth
+        if data == 'Slow':
+            self.pokemon.exp_group = PkExpGroup['slow']
+        elif data == 'Medium Slow':
+            self.pokemon.exp_group = PkExpGroup['mediumslow']
+        elif data == 'Medium Fast':
+            self.pokemon.exp_group = PkExpGroup['mediumfast']
+        elif data == 'Fast':
+            self.pokemon.exp_group = PkExpGroup['fast']
+        elif data == 'Erratic':
+            self.pokemon.exp_group = PkExpGroup['erratic']
+        elif data == 'Fluctuating':
+            self.pokemon.exp_group = PkExpGroup['fluctuating']
+        else:
+            print('Failed to parse experience group \'%s\'' % data)
+        # > td[1] - Base Happiness
+        # > td[2] - Effort Values Earned
+        # > td[3] - Dynamax Capable?
         
         
         
