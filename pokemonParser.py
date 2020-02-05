@@ -14,7 +14,7 @@ class PokemonParser():
         dextables = self.soup.find_all("table", class_="dextable")
 
         self.processPictureDexTable(dextables     [0])
-        self.processGeneralInfoDexTable(dextables [1])
+        general_info = self.processGeneralInfoDexTable(dextables [1])
         self.processDetailedInfoDexTable(dextables[2])
         self.processWeaknessesDexTable(dextables  [3])
         self.processItemAndEggDexTable(dextables  [4])
@@ -29,6 +29,15 @@ class PokemonParser():
         self.processMaxMovesDexTable(dextables    [13])
         stats_struct = self.processStatsDexTable(dextables       [14])
 
+        self.pokemon.name = general_info.name
+        self.pokemon.national_dex_number = general_info.number
+        self.pokemon.gender_threshold = general_info.gender_percents
+        self.pokemon.types = general_info.types
+        self.pokemon.species = general_info.classification
+        self.pokemon.height = general_info.height
+        self.pokemon.weight = general_info.weight
+        self.pokemon.catch_rate = general_info.capture_rate
+        self.pokemon.hatch_counter = general_info.egg_steps
         self.pokemon.base_stats = stats_struct.base_stats 
 
     def processPictureDexTable(self, dt):
