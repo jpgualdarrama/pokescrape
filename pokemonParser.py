@@ -38,29 +38,37 @@ class PokemonParser():
         # tr[0] and tr[2] are just headers
         # tr[1] and tr[3] each contain 5 <td>
         # tr[1]
-        # > td[0] - Name
-        # > td[1] - Other names
-        # > td[2] - Number
-        # > td[3] - Gender Ratio
-        # > td[4] - Types
         tds = tr[1].find_all("td")
-        # tds[0], tds[1], tds[2], tds[3]
+        # > td[0] - Name
+        name = tds[0].string.lower()
+        # > td[1] - Other names
+        # > td[2] - Pokedex Number
+        # use find to only get first tr, don't want region dex
+        national_dex_number = int(tds[2].find("tr").find_all("td")[1].string[1:])
+        # > td[3] - Gender Ratio
+        # the first td in each tr contains "Male" or "Female"
+        # the second td in each tr contains the actual percentage
+        gender_percents = [tr.find_all("td")[1].string for tr in  tds[3].find_all("tr")]
+        # remove "%" at the end of the strings
+        gender_percents = [float(p_string[:-1]) for p_string in gender_percents]
+        # > td[4] - Types
         types_links = tds[4].find_all("a")
         types = [re.match('^.*\/([a-z]+)\.shmtl$', link.href).group(0) for link in types_links]
         types = [PkType[t] for t in types]
-        
         # tr[3]
+        tds = tr[3].find_all("td")
         # > td[0] - Classification
         # > td[1] - Height
         # > td[2] - Weight
         # > td[3] - Capture Rate
-        # > td[4] - Base Egg Steps
-        tds = tr[3].find_all("td")
-        # tds[0], tds[1], tds[2]
         capture_rate = int(tds[3].string)
+        # > td[4] - Base Egg Steps
         egg_steps = int(tds[4].string.replace(',', ''))
         
         return {
+            'name': name,
+            'number': national_dex_number,
+            'gender_percents': gender_percents,
             'types': types,
             'capture_rate': capture_rate,
             'egg_steps': egg_steps
