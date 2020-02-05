@@ -34,7 +34,37 @@ class PokemonParser():
     def processPictureDexTable(self, dt):
         pass
     def processGeneralInfoDexTable(self, dt):
-        pass
+        trs = dt.find_all("tr")
+        # tr[0] and tr[2] are just headers
+        # tr[1] and tr[3] each contain 5 <td>
+        # tr[1]
+        # > td[0] - Name
+        # > td[1] - Other names
+        # > td[2] - Number
+        # > td[3] - Gender Ratio
+        # > td[4] - Types
+        tds = tr[1].find_all("td")
+        # tds[0], tds[1], tds[2], tds[3]
+        types_links = tds[4].find_all("a")
+        types = [re.match('^.*\/([a-z]+)\.shmtl$', link.href).group(0) for link in types_links]
+        
+        # tr[3]
+        # > td[0] - Classification
+        # > td[1] - Height
+        # > td[2] - Weight
+        # > td[3] - Capture Rate
+        # > td[4] - Base Egg Steps
+        tds = tr[3].find_all("td")
+        # tds[0], tds[1], tds[2]
+        capture_rate = int(tds[3].string)
+        egg_steps = int(tds[4].string.replace(',', ''))
+        
+        return {
+            'types': types,
+            'capture_rate': capture_rate,
+            'egg_steps': egg_steps
+        }
+    
     def processDetailedInfoDexTable(self, dt):
         pass
     def processWeaknessesDexTable(self, dt):
