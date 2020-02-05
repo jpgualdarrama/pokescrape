@@ -57,12 +57,15 @@ class PokemonParser():
         types = [PkType[t] for t in types]
         # tr[3]
         tds = tr[3].find_all("td")
-        # > td[0] - Classification
-        # > td[1] - Height
-        # > td[2] - Weight
-        # > td[3] - Capture Rate
+        # > tds[0] - Classification
+        classification = tds[0].string[:-8]
+        # > tds[1] - Height
+        height = tds[1] # TODO - this is either .string or something else because of the <br>
+        # > tds[2] - Weight
+        weight = tds[2] # TODO - this is either .string or something else because of the <br>
+        # > tds[3] - Capture Rate
         capture_rate = int(tds[3].string)
-        # > td[4] - Base Egg Steps
+        # > tds[4] - Base Egg Steps
         egg_steps = int(tds[4].string.replace(',', ''))
         
         return {
@@ -70,6 +73,9 @@ class PokemonParser():
             'number': national_dex_number,
             'gender_percents': gender_percents,
             'types': types,
+            'classification': classification,
+            'height': height,
+            'weight': weight,
             'capture_rate': capture_rate,
             'egg_steps': egg_steps
         }
