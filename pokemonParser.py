@@ -90,6 +90,32 @@ class PokemonParser():
         }
     
     def processDetailedInfoDexTable(self, dt):
+        # Necessary info:
+        # 1. Abilities
+        # 2. Experience Growth
+        # 3. Base Happiness
+        # 4. Effort Values Earned
+        # 5. Dynamax Capable?
+        trs = dt.find_all("tr")
+        # tr[0] and tr[2] are just headers
+        # tr[1] contains abilities
+        # tr[3] contains 4 <td> with the rest
+        
+        # tr[1]
+        # ability names are contained in <b> tags
+        bs = [b.string for b in tr[1].find_all("b")]
+        abilities = []
+        if "Hidden Ability" in bs:
+            bs = (bs[0:-3], bs[-1])
+            [abilities.append({'ability': b, 'hidden': False}) for b in bs]
+            abilities[-1]['hidden'] = True
+        else:
+            [abilities.append({'ability': b, 'hidden': False}) for b in bs]
+            
+        # tr[3]
+        
+        
+        
         pass
     def processWeaknessesDexTable(self, dt):
         pass
