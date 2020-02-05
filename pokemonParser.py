@@ -47,6 +47,7 @@ class PokemonParser():
         # tds[0], tds[1], tds[2], tds[3]
         types_links = tds[4].find_all("a")
         types = [re.match('^.*\/([a-z]+)\.shmtl$', link.href).group(0) for link in types_links]
+        types = [PkType[t] for t in types]
         
         # tr[3]
         # > td[0] - Classification
