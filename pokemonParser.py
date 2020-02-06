@@ -21,14 +21,14 @@ class PokemonParser():
         item_and_egg_info = self.processItemAndEggDexTable(dextables  [4])
         self.processEvolutionDexTable(dextables   [5])
         self.processLocationsDexTable(dextables   [6])
-        self.processDexTextDexTable(dextables     [7])
+        flavor_text_info = self.processDexTextDexTable(dextables     [7])
         self.processLevelUpMovesDexTable(dextables[8])
         self.processTMMovesDexTable(dextables     [9])
         self.processTRMovesDexTable(dextables     [10])
         self.processEggMovesDexTable(dextables    [11])
         self.processTutorMovesDexTable(dextables  [12])
         self.processMaxMovesDexTable(dextables    [13])
-        stats_struct = self.processStatsDexTable(dextables       [14])
+        stats_info = self.processStatsDexTable(dextables       [14])
 
         self.pokemon.name = general_info.name
         self.pokemon.national_dex_number = general_info.number
@@ -48,7 +48,9 @@ class PokemonParser():
         
         self.pokemon.egg_groups = item_and_egg_info.egg_groups
         
-        self.pokemon.base_stats = stats_struct.base_stats 
+        self.pokemon.pokedex = flavor_text_info.flavor_text
+        
+        self.pokemon.base_stats = stats_info.base_stats 
 
     def processPictureDexTable(self, dt):
         pass
@@ -185,7 +187,15 @@ class PokemonParser():
     def processLocationsDexTable(self, dt):
         pass
     def processDexTextDexTable(self, dt):
-        pass
+        trs = [tr for tr in dt.contents if not isinstance(tr, NavigableString)]
+        #trs[0] is a header
+        # the remaining trs will be Flavor text. One row per game
+        tds = [[td.string for td in tr] for tr in trs[1:]]
+        games = [tr_td[0] for tr_td in tds]
+        flavor = [tr_td[1] for tr_td in tds]
+        return {
+            'flavor_text': dict(zip(games, flavor))
+        }
     
     def processLevelUpMovesDexTable(self, dt):
         return self.processMovesDexTable(dt, 'level', True)
