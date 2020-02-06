@@ -18,7 +18,7 @@ class PokemonParser():
         general_info = self.processGeneralInfoDexTable(dextables [1])
         detail_info = self.processDetailedInfoDexTable(dextables[2])
         self.processWeaknessesDexTable(dextables  [3])
-        self.processItemAndEggDexTable(dextables  [4])
+        item_and_egg_info = self.processItemAndEggDexTable(dextables  [4])
         self.processEvolutionDexTable(dextables   [5])
         self.processLocationsDexTable(dextables   [6])
         self.processDexTextDexTable(dextables     [7])
@@ -46,6 +46,7 @@ class PokemonParser():
         self.pokemon.ev_yield = detail_info.ev_yield
         self.pokemon.can_dynamax = detail_info.can_dynamax
         
+        self.pokemon.egg_groups = item_and_egg_info.egg_groups
         
         self.pokemon.base_stats = stats_struct.base_stats 
 
@@ -165,7 +166,20 @@ class PokemonParser():
     def processWeaknessesDexTable(self, dt):
         pass
     def processItemAndEggDexTable(self, dt):
-        pass
+        trs = [tr for tr in dt.contents if not isinstance(tr, NavigableString)]
+        #trs[0] is a header
+        #trs[1]
+        tds = [td for td in trs[1].contents if not isinstance(td, NavigableString)]
+        # > tds[0] - Hold Item
+        # > tds[1] - Egg Groups
+        # every other td in tds[1] will contain the name of an egg group
+        egg_groups = [td.find("a").string for td in tds[1].find_all("td")[1::2]]
+        egg_groups = [pkEggGroup[e] for e in egg_groups]
+        
+        return {
+            'egg_groups': egg_groups
+        }
+    
     def processEvolutionDexTable(self, dt):
         pass
     def processLocationsDexTable(self, dt):
