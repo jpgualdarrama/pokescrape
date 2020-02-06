@@ -16,7 +16,7 @@ class PokemonParser():
 
         self.processPictureDexTable(dextables     [0])
         general_info = self.processGeneralInfoDexTable(dextables [1])
-        self.processDetailedInfoDexTable(dextables[2])
+        detail_info = self.processDetailedInfoDexTable(dextables[2])
         self.processWeaknessesDexTable(dextables  [3])
         self.processItemAndEggDexTable(dextables  [4])
         self.processEvolutionDexTable(dextables   [5])
@@ -39,6 +39,14 @@ class PokemonParser():
         self.pokemon.weight = general_info.weight
         self.pokemon.catch_rate = general_info.capture_rate
         self.pokemon.hatch_counter = general_info.egg_steps
+        
+        self.pokemon.abilities = detail_info.abilities
+        self.pokemon.exp_group = detail_info.exp_group
+        self.pokemon.base_friendship = detail_info.base_happiness
+        self.pokemon.ev_yield = detail_info.ev_yield
+        self.pokemon.can_dynamax = detail_info.can_dynamax
+        
+        
         self.pokemon.base_stats = stats_struct.base_stats 
 
     def processPictureDexTable(self, dt):
@@ -106,7 +114,7 @@ class PokemonParser():
         # 3. Base Happiness
         # 4. Effort Values Earned
         # 5. Dynamax Capable?
-        trs = dt.find_all("tr")
+        trs = [tr for tr in dt.contents if not isinstance(tr, NavigableString)]
         # trs[0] and trs[2] are just headers
         # trs[1] contains abilities
         # trs[3] contains 4 <td> with the rest
@@ -125,27 +133,35 @@ class PokemonParser():
         # trs[3]
         tds = trs[3].find_all("td")
         # > tds[0] - Experience Growth
-        if data == 'Slow':
-            self.pokemon.exp_group = PkExpGroup['slow']
-        elif data == 'Medium Slow':
-            self.pokemon.exp_group = PkExpGroup['mediumslow']
-        elif data == 'Medium Fast':
-            self.pokemon.exp_group = PkExpGroup['mediumfast']
-        elif data == 'Fast':
-            self.pokemon.exp_group = PkExpGroup['fast']
-        elif data == 'Erratic':
-            self.pokemon.exp_group = PkExpGroup['erratic']
-        elif data == 'Fluctuating':
-            self.pokemon.exp_group = PkExpGroup['fluctuating']
+        if tds[0].contents[2] == 'Slow':
+            exp_group = PkExpGroup['slow']
+        elif tds[0].contents[2] == 'Medium Slow':
+            exp_group = PkExpGroup['mediumslow']
+        elif tds[0].contents[2] == 'Medium Fast':
+            exp_group = PkExpGroup['mediumfast']
+        elif tds[0].contents[2] == 'Fast':
+            exp_group = PkExpGroup['fast']
+        elif tds[0].contents[2] == 'Erratic':
+            exp_group = PkExpGroup['erratic']
+        elif tds[0].contents[2] == 'Fluctuating':
+            exp_group = PkExpGroup['fluctuating']
         else:
-            print('Failed to parse experience group \'%s\'' % data)
+            print('Failed to parse experience group \'%s\'' % tds[0].contents[2])
         # > tds[1] - Base Happiness
+        base_happiness = int(tds[1].string) if tds[1].string != '' else -1
         # > tds[2] - Effort Values Earned
+        ev_yield = tds[2].contents[0][:-9] # remove " Point(s)" at the end of the string
         # > tds[3] - Dynamax Capable?
+        can_dynamax = True if "can Dynamax" in tds[3].string else False
         
-        
-        
-        pass
+        return {
+            'abilities: abilities,
+            'exp_group': exp_group,
+            'base_happiness': base_happiness,
+            'ev_yield': ev_yield,
+            'can_dynamax': can_dynamax
+        }
+    
     def processWeaknessesDexTable(self, dt):
         pass
     def processItemAndEggDexTable(self, dt):
