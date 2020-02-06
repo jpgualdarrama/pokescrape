@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from bs4.element import *
 from pokemon import *
 import re
 
@@ -43,35 +44,44 @@ class PokemonParser():
     def processPictureDexTable(self, dt):
         pass
     def processGeneralInfoDexTable(self, dt):
-        trs = dt.find_all("tr")
-        # tr[0] and tr[2] are just headers
-        # tr[1] and tr[3] each contain 5 <td>
-        # tr[1]
-        tds = tr[1].find_all("td")
-        # > td[0] - Name
+        trs = [tr for tr in dt.contents if not isinstance(tr, NavigableString)]
+        # trs[0] and trs[2] are just headers
+        # trs[1] and trs[3] each contain 5 <td>
+        # trs[1]
+        tds = [td for td in trs[1].contents if not isinstance(td, NavigableString)]
+        # > tds[0] - Name
         name = tds[0].string.lower()
-        # > td[1] - Other names
-        # > td[2] - Pokedex Number
+        # > tds[1] - Other names
+        # > tds[2] - Pokedex Number
         # use find to only get first tr, don't want region dex
         national_dex_number = int(tds[2].find("tr").find_all("td")[1].string[1:])
-        # > td[3] - Gender Ratio
+        # > tds[3] - Gender Ratio
         # the first td in each tr contains "Male" or "Female"
         # the second td in each tr contains the actual percentage
-        gender_percents = [tr.find_all("td")[1].string for tr in  tds[3].find_all("tr")]
-        # remove "%" at the end of the strings
-        gender_percents = [float(p_string[:-1]) for p_string in gender_percents]
-        # > td[4] - Types
+        gender_percents = [tr.find_all("td")[1].string for tr in tds[3].find_all("tr")]
+        gender_percents = [float(p[:-1]) for p in gender_percents]
+        # > tds[4] - Types
         types_links = tds[4].find_all("a")
-        types = [re.match('^.*\/([a-z]+)\.shmtl$', link.href).group(0) for link in types_links]
+        types = [re.match('^.*\/([a-z]+)\.shtml$', link['href']).group(1) for link in types_links]
         types = [PkType[t] for t in types]
-        # tr[3]
-        tds = tr[3].find_all("td")
+        # trs[3]
+        tds = trs[3].find_all("td")
         # > tds[0] - Classification
         classification = tds[0].string[:-8]
         # > tds[1] - Height
-        height = tds[1] # TODO - this is either .string or something else because of the <br>
+        height_list = [tds[1].contents[0].string, tds[1].contents[2].string]
+        height_list = [h.strip() for h in height_list]
+        height = {
+            'imperial': height_list[0],
+            'metric': height_list[1]
+        }
         # > tds[2] - Weight
-        weight = tds[2] # TODO - this is either .string or something else because of the <br>
+        weight_list = [tds[2].contents[0].string, tds[2].contents[2].string]
+        weight_list = [w.strip() for w in weight_list]
+        weight = {
+            'imperial': weight_list[0],
+            'metric': weight_list[1]
+        }
         # > tds[3] - Capture Rate
         capture_rate = int(tds[3].string)
         # > tds[4] - Base Egg Steps
@@ -97,13 +107,13 @@ class PokemonParser():
         # 4. Effort Values Earned
         # 5. Dynamax Capable?
         trs = dt.find_all("tr")
-        # tr[0] and tr[2] are just headers
-        # tr[1] contains abilities
-        # tr[3] contains 4 <td> with the rest
+        # trs[0] and trs[2] are just headers
+        # trs[1] contains abilities
+        # trs[3] contains 4 <td> with the rest
         
-        # tr[1]
+        # trs[1]
         # ability names are contained in <b> tags
-        bs = [b.string for b in tr[1].find_all("b")]
+        bs = [b.string for b in trs[1].find_all("b")]
         abilities = []
         if "Hidden Ability" in bs:
             bs = (bs[0:-3], bs[-1])
@@ -112,9 +122,9 @@ class PokemonParser():
         else:
             [abilities.append({'ability': b, 'hidden': False}) for b in bs]
             
-        # tr[3]
-        tds = tr[3].find_all("td")
-        # > td[0] - Experience Growth
+        # trs[3]
+        tds = trs[3].find_all("td")
+        # > tds[0] - Experience Growth
         if data == 'Slow':
             self.pokemon.exp_group = PkExpGroup['slow']
         elif data == 'Medium Slow':
@@ -129,9 +139,9 @@ class PokemonParser():
             self.pokemon.exp_group = PkExpGroup['fluctuating']
         else:
             print('Failed to parse experience group \'%s\'' % data)
-        # > td[1] - Base Happiness
-        # > td[2] - Effort Values Earned
-        # > td[3] - Dynamax Capable?
+        # > tds[1] - Base Happiness
+        # > tds[2] - Effort Values Earned
+        # > tds[3] - Dynamax Capable?
         
         
         

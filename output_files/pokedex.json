@@ -6740,4 +6740,193 @@
             "name":"Sniper",
             "description":"Powers up moves if they become critical hits."
             },
-        
+        {
+            "name":"Snow Cloak",
+            "description":"Raises evasion in a hailstorm."
+            },
+        {
+            "name":"Snow Warning",
+            "description":"The Pok&eacute;mon summons a hailstorm in battle."
+            },
+        {
+            "name":"Solar Power",
+            "description":"In sunshine, Sp. Atk is boosted but HP decreases."
+            },
+        {
+            "name":"Solid Rock",
+            "description":"Reduces damage from supereffective attacks."
+            },
+        {
+            "name":"Soundproof",
+            "description":"Gives full immunity to all sound-based moves."
+            },
+        {
+            "name":"Speed Boost",
+            "description":"Its Speed stat is gradually boosted."
+            },
+        {
+            "name":"Stall",
+            "description":"The Pok&eacute;mon moves after all other Pok&eacute;mon d"
+            },
+        {
+            "name":"Stance Change",
+            "description":"The Pok&eacute;mon changes form depending on how it battles."
+            },
+        {
+            "name":"Static",
+            "description":"Contact with the Pok&eacute;mon may cause paralysis."
+            },
+        {
+            "name":"Steadfast",
+            "description":"Raises Speed each time the Pok&eacute;mon flinches."
+            },
+        {
+            "name":"Stench",
+            "description":"The stench may cause the target to flinch."
+            },
+        {
+            "name":"Sticky Hold",
+            "description":"Protects the Pok&eacute;mon from item theft."
+            },
+        {
+            "name":"Storm Drain",
+            "description":"Draws in all Water-type moves to up Sp. Attack."
+            },
+        {
+            "name":"Strong Jaw",
+            "description":"The Pok&eacute;mon's strong jaw gives it tremendous biting power."
+            },
+        {
+            "name":"Sturdy",
+            "description":"It cannot be knocked out with one hit."
+            },
+        {
+            "name":"Suction Cups",
+            "description":"Negates all moves that force switching out."
+            },
+        {
+            "name":"Super Luck",
+            "description":"Heightens the critical- hit ratios of moves."
+            },
+        {
+            "name":"Swarm",
+            "description":"Powers up Bug-type moves in a pinch."
+            },
+        {
+            "name":"Sweet Veil",
+            "description":"Prevents itself and ally Pok&eacute;mon from falling asleep."
+            },
+        {
+            "name":"Swift Swim",
+            "description":"Boosts the Pok&eacute;mon's Speed in rain."
+            },
+        {
+            "name":"Symbiosis",
+            "description":"The Pok&eacute;mon can pass an item to an ally."
+            },
+        {
+            "name":"Synchronize",
+            "description":"Passes a burn, poison, or paralysis to the foe."
+            },
+        {
+            "name":"Tangled Feet",
+            "description":"Raises evasion if the Pok&eacute;mon is confused."
+            },
+        {
+            "name":"Technician",
+            "description":"Powers up the Pok&eacute;mon's weaker moves."
+            },
+        {
+            "name":"Telepathy",
+            "description":"Anticipates an ally's attack and dodges it."
+            },
+        {
+            "name":"Teravolt",
+            "description":"Moves can be used regardless of Abilities."
+            },
+        {
+            "name":"Thick Fat",
+            "description":"Ups resistance to Fire- and Ice-type moves."
+            },
+        {
+            "name":"Tinted Lens",
+            "description":"Powers up “not very effective” moves."
+            },
+        {
+            "name":"Torrent",
+            "description":"Powers up Water-type moves in a pinch."
+            },
+        {
+            "name":"Tough Claws",
+            "description":"Powers up moves that make direct contact."
+            },
+        {
+            "name":"Toxic Boost",
+            "description":"Powers up physical attacks when poisoned."
+            },
+        {
+            "name":"Trace",
+            "description":"The Pok&eacute;mon copies a foe's Ability."
+            },
+        {
+            "name":"Truant",
+            "description":"Pok&eacute;mon can't attack on consecutive turns."
+            },
+        {
+            "name":"Turboblaze",
+            "description":"Moves can be used regardless of Abilities."
+            },
+        {
+            "name":"Unaware",
+            "description":"Ignores any stat changes in the Pok&eacute;mon."
+            },
+        {
+            "name":"Unburden",
+            "description":"Raises Speed if a held item is used."
+            },
+        {
+            "name":"Unnerve",
+            "description":"Makes the foe nervous and unable to eat Berries."
+            },
+        {
+            "name":"Victory Star",
+            "description":"Boosts the accuracy of its allies and itself."
+            },
+        {
+            "name":"Vital Spirit",
+            "description":"Prevents the Pok&eacute;mon from falling asleep."
+            },
+        {
+            "name":"Volt Absorb",
+            "description":"Restores HP if hit by an Electric-type move."
+            },
+        {
+            "name":"Water Absorb",
+            "description":"Restores HP if hit by a Water-type move."
+            },
+        {
+            "name":"Water Veil",
+            "description":"Prevents the Pok&eacute;mon from getting a burn."
+            },
+        {
+            "name":"Weak Armor",
+            "description":"Physical attacks lower Defense and raise Speed."
+            },
+        {
+            "name":"White Smoke",
+            "description":"Prevents other Pok&eacute;mon from lowering its stats."
+            },
+        {
+            "name":"Wonder Guard",
+            "description":"Only supereffective moves will hit."
+            },
+        {
+            "name":"Wonder Skin",
+            "description":"Makes status-changing moves more likely to miss."
+            },
+        {
+            "name":"Zen Mode",
+            "description":"Changes the Pok&eacute;mon's shape when HP is halved."
+            }
+        ],
+"pokemon":[
