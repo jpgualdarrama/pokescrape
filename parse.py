@@ -191,13 +191,14 @@ def GetAndParse(number, force = False):
         pass
     
     source = open(path, 'r', encoding='utf8')
-    parserBS = PokemonParser(source)
-    parserBS.parse()
+    parser = PokemonParser(source)
+    parser.parse()
 
     # parser = PokemonParser()
     # parser.feed(source.read())
-    # source.close()
-    # 
+
+    source.close()
+
     # parser.pokemon.color = colors[parser.pokemon.national_dex_number]
     # parser.pokemon.body_style = bodyStyles[parser.pokemon.national_dex_number]
     # parser.pokemon.base_exp_yield = baseExpYields[parser.pokemon.national_dex_number]

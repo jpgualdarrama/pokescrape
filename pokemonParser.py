@@ -7,7 +7,8 @@ class PokemonParser():
     def __init__(self, handle):
         self.pokemon = Pokemon()
 
-        self.soup = BeautifulSoup(handle, features="html.parser")
+        # self.soup = BeautifulSoup(handle, features="html.parser")
+        self.soup = BeautifulSoup(handle, features="lxml")
         
         self.in_dextable = False
 
@@ -30,27 +31,23 @@ class PokemonParser():
         self.processMaxMovesDexTable(dextables    [13])
         stats_info = self.processStatsDexTable(dextables       [14])
 
-        self.pokemon.name = general_info.name
-        self.pokemon.national_dex_number = general_info.number
-        self.pokemon.gender_threshold = general_info.gender_percents
-        self.pokemon.types = general_info.types
-        self.pokemon.species = general_info.classification
-        self.pokemon.height = general_info.height
-        self.pokemon.weight = general_info.weight
-        self.pokemon.catch_rate = general_info.capture_rate
-        self.pokemon.hatch_counter = general_info.egg_steps
-        
-        self.pokemon.abilities = detail_info.abilities
-        self.pokemon.exp_group = detail_info.exp_group
-        self.pokemon.base_friendship = detail_info.base_happiness
-        self.pokemon.ev_yield = detail_info.ev_yield
-        self.pokemon.can_dynamax = detail_info.can_dynamax
-        
-        self.pokemon.egg_groups = item_and_egg_info.egg_groups
-        
-        self.pokemon.pokedex = flavor_text_info.flavor_text
-        
-        self.pokemon.base_stats = stats_info.base_stats 
+        self.pokemon.name = general_info['name']
+        self.pokemon.national_dex_number = general_info['number']
+        self.pokemon.gender_threshold = general_info['gender_percents']
+        self.pokemon.types = general_info['types']
+        self.pokemon.species = general_info['classification']
+        self.pokemon.height = general_info['height']
+        self.pokemon.weight = general_info['weight']
+        self.pokemon.catch_rate = general_info['capture_rate']
+        self.pokemon.hatch_counter = general_info['egg_steps']
+        self.pokemon.abilities = detail_info['abilities']
+        self.pokemon.exp_group = detail_info['exp_group']
+        self.pokemon.base_friendship = detail_info['base_happiness']
+        self.pokemon.ev_yield = detail_info['ev_yield']
+        self.pokemon.can_dynamax = detail_info['can_dynamax']
+        self.pokemon.egg_groups = item_and_egg_info['egg_groups']
+        self.pokemon.pokedex = flavor_text_info['flavor_text']
+        self.pokemon.base_stats = stats_info['base_stats']
 
     def processPictureDexTable(self, dt):
         pass
@@ -127,7 +124,7 @@ class PokemonParser():
         bs = [b.string for b in trs[1].find_all("b")]
         abilities = []
         if "Hidden Ability" in bs:
-            bs = (bs[0:-3], bs[-1])
+            bs.pop(-2)
             [abilities.append({'ability': b, 'hidden': False}) for b in bs]
             abilities[-1]['hidden'] = True
         else:
@@ -151,14 +148,14 @@ class PokemonParser():
         else:
             print('Failed to parse experience group \'%s\'' % tds[0].contents[2])
         # > tds[1] - Base Happiness
-        base_happiness = int(tds[1].string) if tds[1].string != '' else -1
+        base_happiness = int(tds[1].string) if tds[1].string is not None  else -1
         # > tds[2] - Effort Values Earned
         ev_yield = tds[2].contents[0][:-9] # remove " Point(s)" at the end of the string
         # > tds[3] - Dynamax Capable?
-        can_dynamax = True if "can Dynamax" in tds[3].string else False
+        can_dynamax = "can Dynamax" in tds[3].string
         
         return {
-            'abilities: abilities,
+            'abilities': abilities,
             'exp_group': exp_group,
             'base_happiness': base_happiness,
             'ev_yield': ev_yield,
@@ -176,7 +173,7 @@ class PokemonParser():
         # > tds[1] - Egg Groups
         # every other td in tds[1] will contain the name of an egg group
         egg_groups = [td.find("a").string for td in tds[1].find_all("td")[1::2]]
-        egg_groups = [pkEggGroup[e] for e in egg_groups]
+        egg_groups = [PkEggGroup[e.lower()] for e in egg_groups]
         
         return {
             'egg_groups': egg_groups
@@ -190,7 +187,7 @@ class PokemonParser():
         trs = [tr for tr in dt.contents if not isinstance(tr, NavigableString)]
         #trs[0] is a header
         # the remaining trs will be Flavor text. One row per game
-        tds = [[td.string for td in tr] for tr in trs[1:]]
+        tds = [[td.string for td in tr if td.string != '\n'] for tr in trs[1:]]
         games = [tr_td[0] for tr_td in tds]
         flavor = [tr_td[1] for tr_td in tds]
         return {
@@ -288,7 +285,7 @@ class PokemonParser():
             },
         }
 
-    def processMovesDexTable(self, dextable, struct_label, table_has_label_column):
+    def processMovesDexTable(self, dt, struct_label, table_has_label_column):
         # - 2 for the fooevo row and the "header" row
         # / 2 because each move has two table rows
         num_moves = (len(dt.find_all("tr")) - 2) / 2
