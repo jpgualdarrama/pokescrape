@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from bs4.element import *
 from pokemon import *
 import re
+import os
 
 class PokemonParser():
     def __init__(self, handle):
@@ -23,11 +24,11 @@ class PokemonParser():
         self.processEvolutionDexTable(dextables   [5])
         self.processLocationsDexTable(dextables   [6])
         flavor_text_info = self.processDexTextDexTable(dextables     [7])
-        self.processLevelUpMovesDexTable(dextables[8])
-        self.processTMMovesDexTable(dextables     [9])
-        self.processTRMovesDexTable(dextables     [10])
-        self.processEggMovesDexTable(dextables    [11])
-        self.processTutorMovesDexTable(dextables  [12])
+        levelup_info = self.processLevelUpMovesDexTable(dextables[8])
+        tm_info = self.processTMMovesDexTable(dextables     [9])
+        tr_info = self.processTRMovesDexTable(dextables     [10])
+        eggmoves_info = self.processEggMovesDexTable(dextables    [11])
+        tutur_info = self.processTutorMovesDexTable(dextables  [12])
         self.processMaxMovesDexTable(dextables    [13])
         stats_info = self.processStatsDexTable(dextables       [14])
 
@@ -286,7 +287,40 @@ class PokemonParser():
         }
 
     def processMovesDexTable(self, dt, struct_label, table_has_label_column):
-        # - 2 for the fooevo row and the "header" row
-        # / 2 because each move has two table rows
-        num_moves = (len(dt.find_all("tr")) - 2) / 2
-        pass
+        trs = dt.find_all("tr")
+        trs.pop(0) # trs[0] is the table header row
+        trs.pop(0) # trs[0] (orig. trs[1]) is the columns header row
+        # the remaining trs contain move data
+        
+        # For each move, the two rows are organized like this:
+        #     Level | Attack Name | Type | Cat  |  Att.  | Acc. | PP | Effect % |
+        # 0: "-"/## |     Link    | Link | Link | "-"/## | ###  | ## | "-"/##   |
+        #    (Level)| (Atk. Name) |              Description                    |
+        # 1:        |             |              Text                           |
+        
+        # for each tr
+        moves = {
+            'level': [],
+            'name': [],
+            'type': [],
+            'category': [],
+            'power': [],
+            'accuracy': [],
+            'pp': [],
+            'effect_percent': []
+        }
+        for r in range(0, len(trs), 2):
+            tds = [td for td in trs[r].contents if not isinstance(td, NavigableString)]
+            moves['level'].append(tds[0].string)
+            moves['name'].append(tds[1].find("a").string)
+            moves['type'].append(os.path.split(tds[2].find("img")['src'])[1][:-4])
+            moves['category'].append(os.path.split(tds[3].find("img")['src'])[1][:-4])
+            moves['power'].append(int(tds[4].string) if tds[4].string != "--" else tds[4].string)
+            moves['accuracy'].append(int(tds[5].string) if tds[5].string != "--" else tds[5].string)
+            moves['pp'].append(int(tds[6].string) if tds[6].string != "--" else tds[6].string)
+            moves['effect_percent'].append(int(tds[7].string) if tds[7].string != "--" else tds[7].string)
+            
+            tds = [td for td in trs[r+1].contents if not isinstance(td, NavigableString)]
+            moves['description'].append(tds[0].string)
+        
+        return moves
