@@ -10,8 +10,6 @@ class PokemonParser():
 
         # self.soup = BeautifulSoup(handle, features="html.parser")
         self.soup = BeautifulSoup(handle, features="lxml")
-        
-        self.in_dextable = False
 
     def parse(self):
         dextables = self.soup.find_all("table", class_="dextable")
