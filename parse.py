@@ -1,5 +1,7 @@
 import os.path
 import urllib.request
+from bs4 import BeautifulSoup
+import re
 from pokemonParser import *
 from pk import *
 from move import *
@@ -21,16 +23,55 @@ def Init():
     loadAbilities()
 
 def loadNames():
-    source = open('input_files/names.txt')
-    
-    for line in source:
-        pieces = line.split('\t')
-        name = pieces[1].strip().lower()
-        nameToNumberMap[name] = int(pieces[0].strip())
-        numberToNameMap[int(pieces[0].strip())] = name
-    
-    source.close()
-    
+    src = "input_files/names.txt"
+    if os.path.exists(src):
+        source = open('input_files/names.txt')
+
+        for line in source:
+            pieces = line.split('\t')
+            name = pieces[1].strip().lower()
+            nameToNumberMap[name] = int(pieces[0].strip())
+            numberToNameMap[int(pieces[0].strip())] = name
+
+        source.close()
+    else:
+        url = "http://serebii.net/pokedex-swsh/"
+        raw_data = urllib.request.urlopen(url)
+        data = raw_data.read().decode('ISO-8859-1').replace('&eacute;', '\u00E9').encode('utf-8')
+        soup = BeautifulSoup(data, features="html.parser")
+        forms = soup.find_all("form")
+
+        # the first two forms are unrelated to the pokedex
+        forms = forms[2:]
+
+        ################################
+        # generate a list of pokemon from the forms
+        # that contain numbers in the first option
+        options = [form.find('option') for form in forms]
+
+        regional_dex_forms = []
+        regional_dex_re = re.compile("^[A-Z][a-z]+:\s*[0-9]+\s*-\s*[0-9]+$")
+        for i in range(0, len(options)):
+          if options[i].string is not None:
+            if regional_dex_re.match(options[i].string):
+              print("%i -> %s" % (i, options[i].string))
+              regional_dex_forms.append(forms[i])
+
+        pokemon_re = re.compile("^([0-9]+)\s*(.*)")
+        for form in regional_dex_forms:
+          options = [opt.string for opt in form.find_all("option") \
+            if opt.string is not None]
+          # remove the first option that is just the name of the dex
+          options.pop(0)
+          for opt in options:
+            m = pokemon_re.match(opt)
+            if m is None:
+                print ("ERROR - no Pokemon match found in option " + opt)
+            else:
+                number = int(m.group(1))
+                name = m.group(2).lower()
+                nameToNumberMap[name] = number
+                numberToNameMap[number] = name
     
 def loadBaseExpYields():
     source = open('input_files/baseexpyields.txt')
