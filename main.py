@@ -8,6 +8,9 @@ import os
 # TODO Some moves may be missing from the source I got the moves file from (esp. ones that do nothing)
 # TODO Scrape hatch counter from another source, serebii is unreliable and may not include it
 # TODO Scrape base exp yields, body style, and color from another source, serebii does not have it
+# TODO Add bulbapedia parsing code to get the hatch counter, base exp yields, body styles, and colors
+# TODO Organize serebii and bulbapedia parsing code into different folders
+# TODO Decide whether or not the Move and Ability classes are of any use
 
 # These pages have all of the information for each of the forms, they'll have to be put in manually
 # Deoxys
