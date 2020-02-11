@@ -41,8 +41,8 @@ def main():
     out = open('output_files/pokedex.json', 'w', encoding='utf8')
 
     out.write('{\n')
-    writeMoves(out)
-    writeAbilities(out)
+    # writeMoves(out)
+    # writeAbilities(out)
     writePokemon(out)
     out.write('}')
     

@@ -1,12 +1,11 @@
 import os.path
 import urllib.request
-from bs4 import BeautifulSoup
 import re
+from bs4 import BeautifulSoup
 from pokemonParser import *
 from pk import *
 from move import *
 from ability import *
-
 
 nameToNumberMap = {}
 numberToNameMap = {}

@@ -297,28 +297,22 @@ class PokemonParser():
         # 1:        |             |              Text                           |
         
         # for each tr
-        moves = {
-            'level': [],
-            'name': [],
-            'type': [],
-            'category': [],
-            'power': [],
-            'accuracy': [],
-            'pp': [],
-            'effect_percent': []
-        }
+        moves = []
         for r in range(0, len(trs), 2):
-            tds = [td for td in trs[r].contents if not isinstance(td, NavigableString)]
-            moves['level'].append(tds[0].string)
-            moves['name'].append(tds[1].find("a").string)
-            moves['type'].append(os.path.split(tds[2].find("img")['src'])[1][:-4])
-            moves['category'].append(os.path.split(tds[3].find("img")['src'])[1][:-4])
-            moves['power'].append(int(tds[4].string) if tds[4].string != "--" else tds[4].string)
-            moves['accuracy'].append(int(tds[5].string) if tds[5].string != "--" else tds[5].string)
-            moves['pp'].append(int(tds[6].string) if tds[6].string != "--" else tds[6].string)
-            moves['effect_percent'].append(int(tds[7].string) if tds[7].string != "--" else tds[7].string)
-            
-            tds = [td for td in trs[r+1].contents if not isinstance(td, NavigableString)]
-            moves['description'].append(tds[0].string)
-        
+            move = PokemonMove()
+            tds  = [td for td in trs[r].contents if not isinstance(td, NavigableString)]
+            tds1 = [td for td in trs[r+1].contents if not isinstance(td, NavigableString)]
+            # Replace the hyphen in tds[0].string with 0 for level 0
+            tds[0].string = tds[0].string.replace(b'\xe2\x80\x94'.decode('utf-8'), '0')
+            move.initializeParameters(int(tds[0].string),
+                                      tds[1].find("a").string, # name
+                                      os.path.split(tds[2].find("img")['src'])[1][:-4], # type
+                                      os.path.split(tds[3].find("img")['src'])[1][:-4], # category
+                                      int(tds[4].string) if tds[4].string != "--" else tds[4].string, # damage
+                                      int(tds[5].string) if tds[5].string != "--" else tds[5].string, # accuracy
+                                      int(tds[6].string) if tds[6].string != "--" else tds[6].string, # PP
+                                      int(tds[7].string) if tds[7].string != "--" else tds[7].string, # effect %
+                                      tds1[0].string)
+            moves.append(move)
+            print(move.__str__())
         return moves
