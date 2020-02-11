@@ -21,26 +21,13 @@ class Move:
     
     def __str__(self):
         return ('Name: %s' % self.name +
-            '\nType: %i (%s)' % (self.type, PkIType[self.type]) +
+            '\nType: %i (%s)' % (self.type, PkIType[self.type].capitalize()) +
             '\nPP: %i' % self.pp +
             '\nPower: %i' % self.power +
             '\nAccuracy: %i' % self.accuracy +
-            '\nCategory: %i (%s)' % (self.category, PkIMoveCategory[self.category]) +
+            '\nCategory: %i (%s)' % (self.category, PkIMoveCategory[self.category].capitalize()) +
             # '\nDamage: %i (%s)' % (self.damage, PkIMoveDamage[self.damage]) +
             '\nDescription: %s' % self.description)
-
-class PokemonMove(Move):
-    def __init__(self):
-        super().__init__()
-        self.level = -1
-
-    def initializeParameters(self, level, name, type, cat, power, acc, pp, effect, desc):
-        super().initializeParameters(name, type, cat, power, acc, pp, effect, desc)
-        self.level = level
-
-    def __str__(self):
-        return (super().__str__() +
-            '\nLevel: %i' % self.level)
 
 moves = [Move()]
 moves_map = {}

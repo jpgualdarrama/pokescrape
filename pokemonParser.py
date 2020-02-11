@@ -194,15 +194,33 @@ class PokemonParser():
         }
     
     def processLevelUpMovesDexTable(self, dt):
-        return self.processMovesDexTable(dt, 'level', True)
+        (levels, moves) = self.processMovesDexTable(dt, True)
+        
+        return {
+            'levels': levels,
+            'moves': moves
+        }
+    
     def processTMMovesDexTable(self, dt):
-        return self.processMovesDexTable(dt, 'tm', True)
+        (tms, moves) = self.processMovesDexTable(dt, True)
+
+        return {
+            'tms': tms,
+            'moves': moves
+        }
+    
     def processTRMovesDexTable(self, dt):
-        return self.processMovesDexTable(dt, 'tr', True)
+        (trs, moves) = self.processMovesDexTable(dt, True)
+
+        return {
+            'trs': trs,
+            'moves': moves
+        }
+    
     def processEggMovesDexTable(self, dt):
-        return self.processMovesDexTable(dt, 'egg', False)
+        return self.processMovesDexTable(dt, False)
     def processTutorMovesDexTable(self, dt):
-        return self.processMovesDexTable(dt, 'tutor', False)
+        return self.processMovesDexTable(dt, False)
     
     def processMaxMovesDexTable(self, dt):
         print("TODO - processMaxMovesDexTable")
@@ -284,7 +302,7 @@ class PokemonParser():
             },
         }
 
-    def processMovesDexTable(self, dt, struct_label, table_has_label_column):
+    def processMovesDexTable(self, dt, table_has_label_column):
         trs = dt.find_all("tr")
         trs.pop(0) # trs[0] is the table header row
         trs.pop(0) # trs[0] (orig. trs[1]) is the columns header row
@@ -298,21 +316,31 @@ class PokemonParser():
         
         # for each tr
         moves = []
+        if table_has_label_column:
+            move_labels = []
+            
         for r in range(0, len(trs), 2):
-            move = PokemonMove()
+            move = Move()
             tds  = [td for td in trs[r].contents if not isinstance(td, NavigableString)]
             tds1 = [td for td in trs[r+1].contents if not isinstance(td, NavigableString)]
             # Replace the hyphen in tds[0].string with 0 for level 0
             tds[0].string = tds[0].string.replace(b'\xe2\x80\x94'.decode('utf-8'), '0')
-            move.initializeParameters(int(tds[0].string),
+            if table_has_label_column:
+                move_labels.append(tds[0].string)
+
+            move.initializeParameters(# int(tds[0].string),
                                       tds[1].find("a").string, # name
                                       os.path.split(tds[2].find("img")['src'])[1][:-4], # type
                                       os.path.split(tds[3].find("img")['src'])[1][:-4], # category
-                                      int(tds[4].string) if tds[4].string != "--" else tds[4].string, # damage
-                                      int(tds[5].string) if tds[5].string != "--" else tds[5].string, # accuracy
+                                      int(tds[4].string) if tds[4].string != "--" and tds[4].string != "??" else 0, # damage
+                                      int(tds[5].string) if tds[5].string != "--" else 100, # accuracy
                                       int(tds[6].string) if tds[6].string != "--" else tds[6].string, # PP
-                                      int(tds[7].string) if tds[7].string != "--" else tds[7].string, # effect %
+                                      int(tds[7].string) if tds[7].string != "--" else 0, # effect %
                                       tds1[0].string)
+            print(move.name)
             moves.append(move)
-            print(move.__str__())
-        return moves
+
+        if table_has_label_column:
+            return (move_labels, moves)
+        else:
+            return moves

@@ -151,13 +151,13 @@ PkMoveCategory = {
 	'none': 0,
 	'physical': 1,
 	'special': 2,
-	'status': 3
+	'other': 3 # 'status': 3
 }
 PkIMoveCategory = {
 	0: 'none',
 	1: 'physical',
 	2: 'special',
-	3: 'status'
+	3: 'other' # 3: 'status'
 }
 
 PkMoveDamage = {
