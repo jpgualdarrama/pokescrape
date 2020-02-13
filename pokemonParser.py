@@ -14,24 +14,31 @@ class PokemonParser():
     def parse(self):
         dextables = self.soup.find_all("table", class_="dextable")
 
-        self.processPictureDexTable(dextables     [0])
-        general_info = self.processGeneralInfoDexTable(dextables [1])
-        detail_info = self.processDetailedInfoDexTable(dextables[2])
-        self.processWeaknessesDexTable(dextables  [3])
-        item_and_egg_info = self.processItemAndEggDexTable(dextables  [4])
-        self.processEvolutionDexTable(dextables   [5])
-        self.processLocationsDexTable(dextables   [6])
-        flavor_text_info = self.processDexTextDexTable(dextables     [7])
-        levelup_info = self.processLevelUpMovesDexTable(dextables[8])
-        tm_info = self.processTMMovesDexTable(dextables     [9])
-        tr_info = self.processTRMovesDexTable(dextables     [10])
-        eggmoves_info = self.processEggMovesDexTable(dextables    [11])
-        tutor_info = self.processTutorMovesDexTable(dextables  [12])
-        self.processMaxMovesDexTable(dextables    [13])
-        if dextables[14].contents[0].string == "Transfer Only Moves":
-            stats_info = self.processStatsDexTable(dextables       [16])
+        self.processPictureDexTable(                       dextables[0])
+        general_info = self.processGeneralInfoDexTable(    dextables[1])
+        detail_info = self.processDetailedInfoDexTable(    dextables[2])
+        self.processWeaknessesDexTable(                    dextables[3])
+        item_and_egg_info = self.processItemAndEggDexTable(dextables[4])
+        self.processEvolutionDexTable(                     dextables[5])
+        if len(dextables[6].contents) > 1 and \
+           len(dextables[6].contents[1].contents) > 1 and \
+           dextables[6].contents[1].contents[1].string == "Gender Differences":
+            goffset = 1
         else:
-            stats_info = self.processStatsDexTable(dextables       [14])
+            goffset = 0
+        self.processLocationsDexTable(                     dextables[goffset+6])
+        flavor_text_info = self.processDexTextDexTable(    dextables[goffset+7])
+        levelup_info = self.processLevelUpMovesDexTable(   dextables[goffset+8])
+        tm_info = self.processTMMovesDexTable(             dextables[goffset+9])
+        tr_info = self.processTRMovesDexTable(             dextables[goffset+10])
+        eggmoves_info = self.processEggMovesDexTable(      dextables[goffset+11])
+        tutor_info = self.processTutorMovesDexTable(       dextables[goffset+12])
+        self.processMaxMovesDexTable(                      dextables[goffset+13])
+        if len(dextables[goffset+14].contents) > 1 and \
+           dextables[goffset+14].contents[0].string == "Transfer Only Moves":
+            stats_info = self.processStatsDexTable(        dextables[goffset+16])
+        else:
+            stats_info = self.processStatsDexTable(        dextables[goffset+14])
 
         self.pokemon.name = general_info['name']
         self.pokemon.national_dex_number = general_info['number']
@@ -226,7 +233,8 @@ class PokemonParser():
         return self.processMovesDexTable(dt, False)
     
     def processMaxMovesDexTable(self, dt):
-        print("TODO - processMaxMovesDexTable")
+        # print("TODO - processMaxMovesDexTable")
+        pass
     def processStatsDexTable(self, dt):
         # TR# > Format:
         #   0 > |                                                Stats                                                |
@@ -350,7 +358,6 @@ class PokemonParser():
             pp   = int(pp_td.string) if pp_td.string != "--" else pp_td.string
             eff  = int(eff_td.string) if eff_td.string != "--" else 0
             move.initializeParameters(name, type, cat, dmg, acc, pp, eff, tds1[0].string)
-            print(move.name)
             moves.append(move)
 
         if table_has_label_column:
