@@ -26,9 +26,12 @@ class PokemonParser():
         tm_info = self.processTMMovesDexTable(dextables     [9])
         tr_info = self.processTRMovesDexTable(dextables     [10])
         eggmoves_info = self.processEggMovesDexTable(dextables    [11])
-        tutur_info = self.processTutorMovesDexTable(dextables  [12])
+        tutor_info = self.processTutorMovesDexTable(dextables  [12])
         self.processMaxMovesDexTable(dextables    [13])
-        stats_info = self.processStatsDexTable(dextables       [14])
+        if dextables[14].contents[0].string == "Transfer Only Moves":
+            stats_info = self.processStatsDexTable(dextables       [16])
+        else:
+            stats_info = self.processStatsDexTable(dextables       [14])
 
         self.pokemon.name = general_info['name']
         self.pokemon.national_dex_number = general_info['number']
@@ -309,9 +312,9 @@ class PokemonParser():
         # the remaining trs contain move data
         
         # For each move, the two rows are organized like this:
-        #     Level | Attack Name | Type | Cat  |  Att.  | Acc. | PP | Effect % |
+        #     Label | Attack Name | Type | Cat  |  Att.  | Acc. | PP | Effect % |
         # 0: "-"/## |     Link    | Link | Link | "-"/## | ###  | ## | "-"/##   |
-        #    (Level)| (Atk. Name) |              Description                    |
+        #    (Label)| (Atk. Name) |              Description                    |
         # 1:        |             |              Text                           |
         
         # for each tr
@@ -323,20 +326,30 @@ class PokemonParser():
             move = Move()
             tds  = [td for td in trs[r].contents if not isinstance(td, NavigableString)]
             tds1 = [td for td in trs[r+1].contents if not isinstance(td, NavigableString)]
-            # Replace the hyphen in tds[0].string with 0 for level 0
-            tds[0].string = tds[0].string.replace(b'\xe2\x80\x94'.decode('utf-8'), '0')
             if table_has_label_column:
+                # Replace the hyphen in tds[0].string with 0 for level 0
+                tds[0].string = tds[0].string.replace(b'\xe2\x80\x94'.decode('utf-8'), '0')
+                offset = 1
                 move_labels.append(tds[0].string)
+            else:
+                offset = 0
 
-            move.initializeParameters(# int(tds[0].string),
-                                      tds[1].find("a").string, # name
-                                      os.path.split(tds[2].find("img")['src'])[1][:-4], # type
-                                      os.path.split(tds[3].find("img")['src'])[1][:-4], # category
-                                      int(tds[4].string) if tds[4].string != "--" and tds[4].string != "??" else 0, # damage
-                                      int(tds[5].string) if tds[5].string != "--" else 100, # accuracy
-                                      int(tds[6].string) if tds[6].string != "--" else tds[6].string, # PP
-                                      int(tds[7].string) if tds[7].string != "--" else 0, # effect %
-                                      tds1[0].string)
+            name_td = tds[offset]
+            type_td = tds[offset+1]
+            cat_td  = tds[offset+2]
+            dmg_td  = tds[offset+3]
+            acc_td  = tds[offset+4]
+            pp_td   = tds[offset+5]
+            eff_td  = tds[offset+6]
+
+            name = name_td.find("a").string
+            type = os.path.split(type_td.find("img")['src'])[1][:-4]
+            cat  = os.path.split(cat_td.find("img")['src'])[1][:-4]
+            dmg  = int(dmg_td.string) if dmg_td.string != "--" and dmg_td.string != "??" else 0
+            acc  = int(acc_td.string) if acc_td.string != "--" else 100
+            pp   = int(pp_td.string) if pp_td.string != "--" else pp_td.string
+            eff  = int(eff_td.string) if eff_td.string != "--" else 0
+            move.initializeParameters(name, type, cat, dmg, acc, pp, eff, tds1[0].string)
             print(move.name)
             moves.append(move)
 

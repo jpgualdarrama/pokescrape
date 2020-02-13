@@ -233,10 +233,6 @@ def GetAndParse(number, force = False):
     source = open(path, 'r', encoding='utf8')
     parser = PokemonParser(source)
     parser.parse()
-
-    # parser = PokemonParser()
-    # parser.feed(source.read())
-
     source.close()
 
     # parser.pokemon.color = colors[parser.pokemon.national_dex_number]
