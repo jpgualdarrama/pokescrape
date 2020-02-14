@@ -14,41 +14,52 @@ class PokemonParser():
     def parse(self, name):
         dextables = self.soup.find_all("table", class_="dextable")
 
-        self.processPictureDexTable(                       dextables[0])
-        general_info = self.processGeneralInfoDexTable(    dextables[1])
-        detail_info = self.processDetailedInfoDexTable(    dextables[2])
-        self.processWeaknessesDexTable(                    dextables[3])
-        item_and_egg_info = self.processItemAndEggDexTable(dextables[4])
-        self.processEvolutionDexTable(                     dextables[5])
-        if len(dextables[6].contents) > 1 and \
-           len(dextables[6].contents[1].contents) > 1 and \
-           dextables[6].contents[1].contents[1].string == "Gender Differences":
-            goffset = 1
-        else:
-            goffset = 0
-        self.processLocationsDexTable(                     dextables[goffset+6])
-        flavor_text_info = self.processDexTextDexTable(    dextables[goffset+7], name)
-        levelup_info = self.processLevelUpMovesDexTable(   dextables[goffset+8])
-        tm_info = self.processTMMovesDexTable(             dextables[goffset+9])
-        tr_info = self.processTRMovesDexTable(             dextables[goffset+10])
-        if len(dextables[goffset+11].contents) > 0 and \
-           dextables[goffset+11].contents[0].string == "Usable Max Moves":
+        # use the offset to skip sections that we aren't going to parse
+        offset = 0
+
+        self.processPictureDexTable(                       dextables[offset+0])
+        general_info = self.processGeneralInfoDexTable(    dextables[offset+1])
+        detail_info = self.processDetailedInfoDexTable(    dextables[offset+2])
+        self.processWeaknessesDexTable(                    dextables[offset+3])
+        item_and_egg_info = self.processItemAndEggDexTable(dextables[offset+4])
+        self.processEvolutionDexTable(                     dextables[offset+5])
+
+        # Skip the "Gender Differences" section
+        if len(dextables[offset+6].contents) > 1 and \
+           len(dextables[offset+6].contents[1].contents) > 1 and \
+           dextables[offset+6].contents[1].contents[1].string == "Gender Differences":
+            offset += 1
+
+        # Skip the "Alternate Forms" section
+        if len(dextables[offset+6].contents) > 1 and \
+           len(dextables[offset+6].contents[1].contents) > 1 and \
+           dextables[offset+6].contents[1].contents[1].string == "Alternate Forms":
+            offset += 1
+        
+        self.processLocationsDexTable(                     dextables[offset+6])
+        flavor_text_info = self.processDexTextDexTable(    dextables[offset+7], name)
+        levelup_info = self.processLevelUpMovesDexTable(   dextables[offset+8])
+        tm_info = self.processTMMovesDexTable(             dextables[offset+9])
+        tr_info = self.processTRMovesDexTable(             dextables[offset+10])
+
+        # Skip the "Usable Max Moves" section
+        if len(dextables[offset+11].contents) > 0 and \
+           dextables[offset+11].contents[0].string == "Usable Max Moves":
             eggmoves_info = {}
             tutor_info = {}
-            mmoffset = 0
         else:
-            eggmoves_info = self.processEggMovesDexTable(      dextables[goffset+11])
-            tutor_info = self.processTutorMovesDexTable(       dextables[goffset+12])
-            mmoffset = 2
+            eggmoves_info = self.processEggMovesDexTable(      dextables[offset+11])
+            tutor_info = self.processTutorMovesDexTable(       dextables[offset+12])
+            offset += 2
             
-        self.processMaxMovesDexTable(                      dextables[goffset+mmoffset+11])
+        self.processMaxMovesDexTable(                      dextables[offset+11])
         
-        if len(dextables[goffset+mmoffset+12].contents) > 1 and \
-           dextables[goffset+mmoffset+12].contents[0].string == "Transfer Only Moves":
+        if len(dextables[offset+12].contents) > 1 and \
+           dextables[offset+12].contents[0].string == "Transfer Only Moves":
             # skip transfer only tables
-            stats_info = self.processStatsDexTable(        dextables[goffset+mmoffset+14])
+            stats_info = self.processStatsDexTable(        dextables[offset+14])
         else:
-            stats_info = self.processStatsDexTable(        dextables[goffset+mmoffset+12])
+            stats_info = self.processStatsDexTable(        dextables[offset+12])
 
         self.pokemon.name = general_info['name']
         self.pokemon.national_dex_number = general_info['number']
