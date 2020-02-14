@@ -11,7 +11,7 @@ class PokemonParser():
         # self.soup = BeautifulSoup(handle, features="html.parser")
         self.soup = BeautifulSoup(handle, features="lxml")
 
-    def parse(self):
+    def parse(self, name):
         dextables = self.soup.find_all("table", class_="dextable")
 
         self.processPictureDexTable(                       dextables[0])
@@ -27,18 +27,28 @@ class PokemonParser():
         else:
             goffset = 0
         self.processLocationsDexTable(                     dextables[goffset+6])
-        flavor_text_info = self.processDexTextDexTable(    dextables[goffset+7])
+        flavor_text_info = self.processDexTextDexTable(    dextables[goffset+7], name)
         levelup_info = self.processLevelUpMovesDexTable(   dextables[goffset+8])
         tm_info = self.processTMMovesDexTable(             dextables[goffset+9])
         tr_info = self.processTRMovesDexTable(             dextables[goffset+10])
-        eggmoves_info = self.processEggMovesDexTable(      dextables[goffset+11])
-        tutor_info = self.processTutorMovesDexTable(       dextables[goffset+12])
-        self.processMaxMovesDexTable(                      dextables[goffset+13])
-        if len(dextables[goffset+14].contents) > 1 and \
-           dextables[goffset+14].contents[0].string == "Transfer Only Moves":
-            stats_info = self.processStatsDexTable(        dextables[goffset+16])
+        if len(dextables[goffset+11].contents) > 0 and \
+           dextables[goffset+11].contents[0].string == "Usable Max Moves":
+            eggmoves_info = {}
+            tutor_info = {}
+            mmoffset = 0
         else:
-            stats_info = self.processStatsDexTable(        dextables[goffset+14])
+            eggmoves_info = self.processEggMovesDexTable(      dextables[goffset+11])
+            tutor_info = self.processTutorMovesDexTable(       dextables[goffset+12])
+            mmoffset = 2
+            
+        self.processMaxMovesDexTable(                      dextables[goffset+mmoffset+11])
+        
+        if len(dextables[goffset+mmoffset+12].contents) > 1 and \
+           dextables[goffset+mmoffset+12].contents[0].string == "Transfer Only Moves":
+            # skip transfer only tables
+            stats_info = self.processStatsDexTable(        dextables[goffset+mmoffset+14])
+        else:
+            stats_info = self.processStatsDexTable(        dextables[goffset+mmoffset+12])
 
         self.pokemon.name = general_info['name']
         self.pokemon.national_dex_number = general_info['number']
@@ -192,16 +202,61 @@ class PokemonParser():
         pass
     def processLocationsDexTable(self, dt):
         pass
-    def processDexTextDexTable(self, dt):
+    def processDexTextDexTable(self, dt, name):
         trs = [tr for tr in dt.contents if not isinstance(tr, NavigableString)]
         #trs[0] is a header
-        # the remaining trs will be Flavor text. One row per game
-        tds = [[td.string for td in tr if td.string != '\n'] for tr in trs[1:]]
-        games = [tr_td[0] for tr_td in tds]
-        flavor = [tr_td[1] for tr_td in tds]
-        return {
-            'flavor_text': dict(zip(games, flavor))
-        }
+        trs.pop(0)
+
+        # the flavor text dextable can be in one of two formats:
+        # if the species has more than one form with different flavor text:
+        # | row | picture | game |          flavor text          |
+        # |-----|---------|------|-------------------------------|
+        # |  0  |   P     |  g1  | text text text                |
+        # |-----|         |------|-------------------------------|
+        # | ... |    I    | .... | ...                           |
+        # |-----|         |------|-------------------------------|
+        # |  N  |     C   |g(N+1)| text text text                |
+        # |-----|---------|------|-------------------------------|
+        # otherwise:
+        # | row | game |          flavor text          |
+        # |-----|------|-------------------------------|
+        # |  0  |  g1  | text text text                |
+        # |-----|------|-------------------------------|
+        # | ... | .... | ...                           |
+        # |-----|------|-------------------------------|
+        # |  N  |g(N+1)| text text text                |
+        # |-----|------|-------------------------------|
+
+        # check the number of td's in trs[0] to see if there are 2 or 3
+        row_0_tds = [td for td in trs[0].contents if not isinstance(td, NavigableString)]
+
+        if len(row_0_tds) == 3:
+            # every third row
+            struct = {}
+            names = []
+            for i in range(0, len(trs), 3):
+                name = os.path.split(trs[i].contents[0].contents[0]['src'])[1][:-4]
+                struct[name] = {}
+                struct[name][trs[i].contents[1].string] = trs[i].contents[2].string
+                struct[name][trs[i+1].string] = trs[i+2].string
+            
+            return {
+                'flavor_text': struct
+            }
+            
+        elif len(row_0_tds) == 2:
+            tds = [[td.string for td in tr.contents if not isinstance(td, NavigableString)] for tr in trs]
+            games = [tr_td[0] for tr_td in tds]
+            flavor = [tr_td[1] for tr_td in tds]
+            struct = {}
+            struct[name] = dict(zip(games, flavor))
+            return {
+                'flavor_text': struct
+            }
+        else:
+            print("ERROR - Unable to process flavor text dex table of %s!" % name)
+            return {'flavor_text': {}}
+        
     
     def processLevelUpMovesDexTable(self, dt):
         (levels, moves) = self.processMovesDexTable(dt, True)

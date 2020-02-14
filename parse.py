@@ -1,5 +1,6 @@
 import os.path
 import urllib.request
+from urllib.error import HTTPError
 import re
 from bs4 import BeautifulSoup
 from pokemonParser import *
@@ -218,27 +219,36 @@ def GetAndParse(number, force = False):
     suffix = '%03i.shtml' % number
     path = 'cache/' + suffix
     name = numberToNameMap[number]
+    will_parse = True
     if force == True or os.path.isfile(path) == False:
         # url = 'http://www.serebii.net/pokedex-xy/' + suffix
         url = 'http://www.serebii.net/pokedex-swsh/' + name
         print('Fetching \'%s\' to \'%s\'' % (url, path))
-        data = urllib.request.urlopen(url)
-        out = open(path, 'wb')
-        out.write(data.read().decode('ISO-8859-1').replace('&eacute;', '\u00E9').encode('utf-8'))
-        print('Using newly-fetched file \'%s\'' % path)
+        try:
+            data = urllib.request.urlopen(url)
+            out = open(path, 'wb')
+            out.write(data.read().decode('ISO-8859-1').replace('&eacute;', '\u00E9').encode('utf-8'))
+            print('Using newly-fetched file \'%s\'' % path)
+        except HTTPError as e:
+            print("Unable to read url %s" % url)
+            will_parse = False
+            
     else:
         print('Using already-fetched file \'%s\'' % path)
         pass
-    
-    source = open(path, 'r', encoding='utf8')
-    parser = PokemonParser(source)
-    parser.parse()
-    source.close()
 
-    # parser.pokemon.color = colors[parser.pokemon.national_dex_number]
-    # parser.pokemon.body_style = bodyStyles[parser.pokemon.national_dex_number]
-    # parser.pokemon.base_exp_yield = baseExpYields[parser.pokemon.national_dex_number]
+    if will_parse:
+        source = open(path, 'r', encoding='utf8')
+        parser = PokemonParser(source)
+        parser.parse(name)
+        source.close()
+        
+        # parser.pokemon.color = colors[parser.pokemon.national_dex_number]
+        # parser.pokemon.body_style = bodyStyles[parser.pokemon.national_dex_number]
+        # parser.pokemon.base_exp_yield = baseExpYields[parser.pokemon.national_dex_number]
     
-    print('Done parsing \'%s\'' % path)
+        print('Done parsing \'%s\'' % path)
     
-    return parser.pokemon
+        return parser.pokemon
+    else:
+        return None
