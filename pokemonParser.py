@@ -39,6 +39,15 @@ class PokemonParser():
         self.processLocationsDexTable(                     dextables[offset+6])
         flavor_text_info = self.processDexTextDexTable(    dextables[offset+7], name)
         levelup_info = self.processLevelUpMovesDexTable(   dextables[offset+8])
+
+        # Skip the "Alola Form Level Up" section
+        if len(dextables[offset+9].contents) > 0 and \
+           len(dextables[offset+9].contents[0].contents) > 0 and \
+           len(dextables[offset+9].contents[0].contents[0].contents) > 0 and \
+           len(dextables[offset+9].contents[0].contents[0].contents[0].contents) > 1 and \
+           dextables[offset+9].contents[0].contents[0].contents[0].contents[1].string == "Alola Form Level Up":
+            offset += 1
+            
         tm_info = self.processTMMovesDexTable(             dextables[offset+9])
         tr_info = self.processTRMovesDexTable(             dextables[offset+10])
 
@@ -381,15 +390,16 @@ class PokemonParser():
 
     def processMovesDexTable(self, dt, table_has_label_column):
         trs = dt.find_all("tr")
+        # trs = [tr for tr in dt.contents if tr.name == 'tr']
         trs.pop(0) # trs[0] is the table header row
         trs.pop(0) # trs[0] (orig. trs[1]) is the columns header row
         # the remaining trs contain move data
         
         # For each move, the two rows are organized like this:
-        #     Label | Attack Name | Type | Cat  |  Att.  | Acc. | PP | Effect % |
-        # 0: "-"/## |     Link    | Link | Link | "-"/## | ###  | ## | "-"/##   |
-        #    (Label)| (Atk. Name) |              Description                    |
-        # 1:        |             |              Text                           |
+        #     Label | Attack Name | Type | Cat  |  Att.  | Acc. | PP | Effect % | [ Form ] |
+        # 0: "-"/## |     Link    | Link | Link | "-"/## | ###  | ## | "-"/##   | [F1 |F2] |
+        #    (Label)| (Atk. Name) |              Description                    | [(Form)] |
+        # 1:        |             |              Text                           | [F1  F2] |
         
         # for each tr
         moves = []
@@ -416,6 +426,12 @@ class PokemonParser():
             pp_td   = tds[offset+5]
             eff_td  = tds[offset+6]
 
+            # if the table contains a Form column
+            if len(tds) > offset+7:
+                form_td = tds[offset+7]
+                form_imgs = form_td.find_all("img")
+                forms = [img['alt'].lower().replace(" ","_") for img in form_imgs]
+
             name = name_td.find("a").string
             type = os.path.split(type_td.find("img")['src'])[1][:-4]
             cat  = os.path.split(cat_td.find("img")['src'])[1][:-4]
@@ -426,6 +442,7 @@ class PokemonParser():
             move.initializeParameters(name, type, cat, dmg, acc, pp, eff, tds1[0].string)
             moves.append(move)
 
+        # TODO: Return forms
         if table_has_label_column:
             return (move_labels, moves)
         else:
