@@ -223,6 +223,8 @@ def GetAndParse(number, force = False):
     if force == True or os.path.isfile(path) == False:
         # url = 'http://www.serebii.net/pokedex-xy/' + suffix
         url = 'http://www.serebii.net/pokedex-swsh/' + name
+        # cleanup un-allowed characters
+        url = url.replace('&eacute;', '\u00E9').replace('\u2640', 'f').replace('\u2642', 'm')
         print('Fetching \'%s\' to \'%s\'' % (url, path))
         try:
             data = urllib.request.urlopen(url)

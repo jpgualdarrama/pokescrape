@@ -1,3 +1,4 @@
+import pdb
 from bs4 import BeautifulSoup
 from bs4.element import *
 from pokemon import *
@@ -11,82 +12,129 @@ class PokemonParser():
         # self.soup = BeautifulSoup(handle, features="html.parser")
         self.soup = BeautifulSoup(handle, features="lxml")
 
+    def dtMatches(self, dt, comp_str, contents_lengths, index_type_pairs, last_index):
+        # args[0]  -> [(index, type), (index, type)]
+        # args[1]  -> len
+        ret_val = len(dt.contents) > contents_lengths[0]
+        if len(index_type_pairs) > 0:
+            (index, typ) = index_type_pairs[0]
+            ret_val = ret_val and isinstance(dt.contents[index], typ)
+            if ret_val:
+                if len(index_type_pairs) > 1:
+                    ret_val = ret_val and \
+                              self.dtMatches(dt.contents[index], comp_str, \
+                                             contents_lengths[1:], 
+                                             index_type_pairs[1:], last_index)
+                    pass
+                else:
+                    if len(dt.contents) > index and len(dt.contents[index].contents) > last_index and \
+                       isinstance(dt.contents[index].contents[last_index].string, NavigableString):
+                        ret_val = ret_val and dt.contents[index].contents[last_index].string.lower() == comp_str.lower()
+                    else:
+                        ret_val = False
+                pass
+            pass
+        
+        return ret_val
+
     def parse(self, name):
         dextables = self.soup.find_all("table", class_="dextable")
 
-        # use the offset to skip sections that we aren't going to parse
-        offset = 0
+        general_info = None
+        detail_info = None
+        item_and_egg_info = None
+        flavor_text_info = None
+        levelup_info = None
+        tm_info = None
+        tr_info = None
+        eggmoves_info = None
+        tutor_info = None
+        stats_info = None
 
-        self.processPictureDexTable(                       dextables[offset+0])
-        general_info = self.processGeneralInfoDexTable(    dextables[offset+1])
-        detail_info = self.processDetailedInfoDexTable(    dextables[offset+2])
-        self.processWeaknessesDexTable(                    dextables[offset+3])
-        item_and_egg_info = self.processItemAndEggDexTable(dextables[offset+4])
-        self.processEvolutionDexTable(                     dextables[offset+5])
+        num_dt = len(dextables)
 
-        # Skip the "Gender Differences" section
-        if len(dextables[offset+6].contents) > 1 and \
-           len(dextables[offset+6].contents[1].contents) > 1 and \
-           dextables[offset+6].contents[1].contents[1].string == "Gender Differences":
-            offset += 1
+        for i in range(0, num_dt):
+            dt = dextables[i]
+            if self.dtMatches(dt, "Picture", [1], [(1, Tag)], 1):
+                self.processPictureDexTable(dt)
+            elif self.dtMatches(dt, "Name", [1], [(1, Tag)], 1):
+                general_info = self.processGeneralInfoDexTable(dt)
+            elif self.dtMatches(dt, "Abilities", [1, 1], [(1, Tag), (1, Tag)], 0):
+                detail_info = self.processDetailedInfoDexTable(dt)
+            elif self.dtMatches(dt, "Weakness", [1, 1], [(1, Tag), (1, Tag)], 1):
+                self.processWeaknessesDexTable(dt)
+            elif self.dtMatches(dt, "Wild Hold Item", [1], [(1, Tag)], 1):
+                item_and_egg_info = self.processItemAndEggDexTable(dt)
+            elif self.dtMatches(dt, "Evolutionary Chain", [1], [(1, Tag)], 1):
+                self.processEvolutionDexTable(dt)
+            elif self.dtMatches(dt, "Locations", [1], [(1, Tag)], 1) or \
+                 self.dtMatches(dt, "Locations", [1, 1], [(1, Tag), (1, Tag)], 0):
+                self.processLocationsDexTable(dt)
+            elif self.dtMatches(dt, "Flavor Text", [1], [(1, Tag)], 1):
+                flavor_text_info = self.processDexTextDexTable(dt, name)
+            elif self.dtMatches(dt, "Gender Differences", [1], [(1, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Alternate Forms", [1], [(1, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Standard Level Up", [0, 0, 0], [(0, Tag), (0, Tag), (0, Tag)], 1):
+                levelup_info = self.processLevelUpMovesDexTable(dt)
+            elif self.dtMatches(dt, "Alola Form Level Up", [0, 0, 0], [(0, Tag), (0, Tag), (0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Galarian Form Level Up", [0, 0, 0], [(0, Tag), (0, Tag), (0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Technical Machine Attacks", [0, 0], [(0, Tag), (0, Tag)], 1):
+                tm_info = self.processTMMovesDexTable(dt)
+            elif self.dtMatches(dt, "Technical Record Attacks", [0, 0], [(0, Tag), (0, Tag)], 1):
+                tr_info = self.processTRMovesDexTable(dt)
+            elif self.dtMatches(dt, "Egg Moves", [0, 0], [(0, Tag), (0, Tag)], 1):
+                eggmoves_info = self.processEggMovesDexTable(dt)
+            elif self.dtMatches(dt, "Move Tutor Attacks", [0, 0], [(0, Tag), (0, Tag)], 0):
+                tutor_info = self.processTutorMovesDexTable(dt)
+            elif self.dtMatches(dt, "Usable Max Moves", [0, 0], [(0, Tag), (0, Tag)], 0):
+                self.processMaxMovesDexTable(dt)
+            elif self.dtMatches(dt, "Transfer Only Moves", [0], [(0, Tag)], 0): # collapsed
+                pass
+            elif self.dtMatches(dt, "Transfer Only Moves ", [0, 0], [(0, Tag), (0, Tag)], 0): # expanded
+                pass
+            elif self.dtMatches(dt, "Stats", [0], [(0, Tag)], 1):
+                stats_info = self.processStatsDexTable(dt)
+            elif self.dtMatches(dt, "Stats - Alolan " + name, [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Stats - Galarian " + name, [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Pre-Evolution Only Moves", [0], [(0, Tag)], 0):
+                pass
+            elif self.dtMatches(dt, "Gigantamax " + name, [1], [(1, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Special Moves", [0, 0], [(0, Tag), (0, Tag)], 0):
+                pass
+            else:
+                print("ERROR: Unable to find match for dextables[%i] for %s" % (i, name.capitalize()))
+                pdb.set_trace()
+            pass
 
-        # Skip the "Alternate Forms" section
-        if len(dextables[offset+6].contents) > 1 and \
-           len(dextables[offset+6].contents[1].contents) > 1 and \
-           dextables[offset+6].contents[1].contents[1].string == "Alternate Forms":
-            offset += 1
-        
-        self.processLocationsDexTable(                     dextables[offset+6])
-        flavor_text_info = self.processDexTextDexTable(    dextables[offset+7], name)
-        levelup_info = self.processLevelUpMovesDexTable(   dextables[offset+8])
-
-        # Skip the "Alola Form Level Up" section
-        if len(dextables[offset+9].contents) > 0 and \
-           len(dextables[offset+9].contents[0].contents) > 0 and \
-           len(dextables[offset+9].contents[0].contents[0].contents) > 0 and \
-           len(dextables[offset+9].contents[0].contents[0].contents[0].contents) > 1 and \
-           dextables[offset+9].contents[0].contents[0].contents[0].contents[1].string == "Alola Form Level Up":
-            offset += 1
-            
-        tm_info = self.processTMMovesDexTable(             dextables[offset+9])
-        tr_info = self.processTRMovesDexTable(             dextables[offset+10])
-
-        # Skip the "Usable Max Moves" section
-        if len(dextables[offset+11].contents) > 0 and \
-           dextables[offset+11].contents[0].string == "Usable Max Moves":
-            eggmoves_info = {}
-            tutor_info = {}
-        else:
-            eggmoves_info = self.processEggMovesDexTable(      dextables[offset+11])
-            tutor_info = self.processTutorMovesDexTable(       dextables[offset+12])
-            offset += 2
-            
-        self.processMaxMovesDexTable(                      dextables[offset+11])
-        
-        if len(dextables[offset+12].contents) > 1 and \
-           dextables[offset+12].contents[0].string == "Transfer Only Moves":
-            # skip transfer only tables
-            stats_info = self.processStatsDexTable(        dextables[offset+14])
-        else:
-            stats_info = self.processStatsDexTable(        dextables[offset+12])
-
-        self.pokemon.name = general_info['name']
-        self.pokemon.national_dex_number = general_info['number']
-        self.pokemon.gender_threshold = general_info['gender_percents']
-        self.pokemon.types = general_info['types']
-        self.pokemon.species = general_info['classification']
-        self.pokemon.height = general_info['height']
-        self.pokemon.weight = general_info['weight']
-        self.pokemon.catch_rate = general_info['capture_rate']
-        self.pokemon.hatch_counter = general_info['egg_steps']
-        self.pokemon.abilities = detail_info['abilities']
-        self.pokemon.exp_group = detail_info['exp_group']
-        self.pokemon.base_friendship = detail_info['base_happiness']
-        self.pokemon.ev_yield = detail_info['ev_yield']
-        self.pokemon.can_dynamax = detail_info['can_dynamax']
-        self.pokemon.egg_groups = item_and_egg_info['egg_groups']
-        self.pokemon.pokedex = flavor_text_info['flavor_text']
-        self.pokemon.base_stats = stats_info['base_stats']
+        if general_info is not None:
+            self.pokemon.name = general_info['name']
+            self.pokemon.national_dex_number = general_info['number']
+            self.pokemon.gender_threshold = general_info['gender_percents']
+            self.pokemon.types = general_info['types']
+            self.pokemon.species = general_info['classification']
+            self.pokemon.height = general_info['height']
+            self.pokemon.weight = general_info['weight']
+            self.pokemon.catch_rate = general_info['capture_rate']
+            self.pokemon.hatch_counter = general_info['egg_steps']
+        if detail_info is not None:
+            self.pokemon.abilities = detail_info['abilities']
+            self.pokemon.exp_group = detail_info['exp_group']
+            self.pokemon.base_friendship = detail_info['base_happiness']
+            self.pokemon.ev_yield = detail_info['ev_yield']
+            self.pokemon.can_dynamax = detail_info['can_dynamax']
+        if item_and_egg_info is not None:
+            self.pokemon.egg_groups = item_and_egg_info['egg_groups']
+        if flavor_text_info is not None:
+            self.pokemon.pokedex = flavor_text_info['flavor_text']
+        if stats_info is not None:
+            self.pokemon.base_stats = stats_info['base_stats']
 
     def processPictureDexTable(self, dt):
         pass
@@ -114,7 +162,10 @@ class PokemonParser():
         # trs[3]
         tds = trs[3].find_all("td")
         # > tds[0] - Classification
-        classification = tds[0].string[:-8]
+        if tds[0].string is not None:
+            classification = tds[0].string[:-8]
+        else:
+            classification = tds[0].contents[0].string
         # > tds[1] - Height
         height_list = [tds[1].contents[0].string, tds[1].contents[2].string]
         height_list = [h.strip() for h in height_list]
@@ -305,6 +356,8 @@ class PokemonParser():
     def processEggMovesDexTable(self, dt):
         return self.processMovesDexTable(dt, False)
     def processTutorMovesDexTable(self, dt):
+        if dt.contents[0].name == 'thead':
+            dt = dt.contents[0]
         return self.processMovesDexTable(dt, False)
     
     def processMaxMovesDexTable(self, dt):
@@ -389,8 +442,9 @@ class PokemonParser():
         }
 
     def processMovesDexTable(self, dt, table_has_label_column):
-        trs = dt.find_all("tr")
-        # trs = [tr for tr in dt.contents if tr.name == 'tr']
+        # trs = dt.find_all("tr")
+        
+        trs = [tr for tr in dt.contents if tr.name == 'tr']
         trs.pop(0) # trs[0] is the table header row
         trs.pop(0) # trs[0] (orig. trs[1]) is the columns header row
         # the remaining trs contain move data
