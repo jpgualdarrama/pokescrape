@@ -82,6 +82,10 @@ class PokemonParser():
                 pass
             elif self.dtMatches(dt, "Galarian Form Level Up", [0, 0, 0], [(0, Tag), (0, Tag), (0, Tag)], 1):
                 pass
+            elif self.dtMatches(dt, "Level Up - Male", [0, 0, 0], [(0, Tag), (0, Tag), (0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Level Up - Female", [0, 0], [(0, Tag), (0, Tag)], 0):
+                pass
             elif self.dtMatches(dt, "Technical Machine Attacks", [0, 0], [(0, Tag), (0, Tag)], 1):
                 tm_info = self.processTMMovesDexTable(dt)
             elif self.dtMatches(dt, "Technical Record Attacks", [0, 0], [(0, Tag), (0, Tag)], 1):
@@ -101,6 +105,8 @@ class PokemonParser():
             elif self.dtMatches(dt, "Stats - Alolan " + name, [0], [(0, Tag)], 1):
                 pass
             elif self.dtMatches(dt, "Stats - Galarian " + name, [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Stats - Alternate Forms", [0], [(0, Tag)], 1):
                 pass
             elif self.dtMatches(dt, "Pre-Evolution Only Moves", [0], [(0, Tag)], 0):
                 pass

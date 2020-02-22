@@ -224,7 +224,15 @@ def GetAndParse(number, force = False):
         # url = 'http://www.serebii.net/pokedex-xy/' + suffix
         url = 'http://www.serebii.net/pokedex-swsh/' + name
         # cleanup un-allowed characters
-        url = url.replace('&eacute;', '\u00E9').replace('\u2640', 'f').replace('\u2642', 'm')
+        # e'
+        # nidoran-f
+        # nidoran-m
+        # mr. mime
+        url = url.replace('&eacute;', '\u00E9').\
+              replace('\u00e9', 'e').\
+              replace('\u2640', 'f').\
+              replace('\u2642', 'm').\
+              replace(' ', '')         
         print('Fetching \'%s\' to \'%s\'' % (url, path))
         try:
             data = urllib.request.urlopen(url)
