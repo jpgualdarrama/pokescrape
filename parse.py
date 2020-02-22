@@ -25,7 +25,7 @@ def Init():
 def loadNames():
     src = "input_files/names.txt"
     if os.path.exists(src):
-        source = open('input_files/names.txt')
+        source = open(src)
 
         for line in source:
             pieces = line.split('\t')
@@ -72,6 +72,13 @@ def loadNames():
                 name = m.group(2).lower()
                 nameToNumberMap[name] = number
                 numberToNameMap[number] = name
+
+        # write the numbers and names back to a file
+        dest = open(src, "w")
+        numbers = sorted(numberToNameMap.keys())
+        for n in numbers:
+            dest.write("%03i\t%s\n" %(n, numberToNameMap[n]))
+        dest.close()
     
 def loadBaseExpYields():
     source = open('input_files/baseexpyields.txt')
@@ -79,7 +86,8 @@ def loadBaseExpYields():
     for line in source:
         pieces = line.split('\t')
         name = pieces[2].strip().lower()
-        baseExpYields[nameToNumberMap[name]] = int(pieces[3].strip())
+        if name in nameToNumberMap:
+            baseExpYields[nameToNumberMap[name]] = int(pieces[3].strip())
     
     source.close()
 
@@ -218,47 +226,50 @@ def GetAndParse(number, force = False):
 
     suffix = '%03i.shtml' % number
     path = 'cache/' + suffix
-    name = numberToNameMap[number]
-    will_parse = True
-    if force == True or os.path.isfile(path) == False:
-        # url = 'http://www.serebii.net/pokedex-xy/' + suffix
-        url = 'http://www.serebii.net/pokedex-swsh/' + name
-        # cleanup un-allowed characters
-        # e'
-        # nidoran-f
-        # nidoran-m
-        # mr. mime
-        url = url.replace('&eacute;', '\u00E9').\
-              replace('\u00e9', 'e').\
-              replace('\u2640', 'f').\
-              replace('\u2642', 'm').\
-              replace(' ', '')         
-        print('Fetching \'%s\' to \'%s\'' % (url, path))
-        try:
-            data = urllib.request.urlopen(url)
-            out = open(path, 'wb')
-            out.write(data.read().decode('ISO-8859-1').replace('&eacute;', '\u00E9').encode('utf-8'))
-            print('Using newly-fetched file \'%s\'' % path)
-        except HTTPError as e:
-            print("Unable to read url %s" % url)
-            will_parse = False
-            
-    else:
-        print('Using already-fetched file \'%s\'' % path)
-        pass
-
-    if will_parse:
-        source = open(path, 'r', encoding='utf8')
-        parser = PokemonParser(source)
-        parser.parse(name)
-        source.close()
+    if number in numberToNameMap:
+        name = numberToNameMap[number]
+        will_parse = True
+        if force == True or os.path.isfile(path) == False:
+            # url = 'http://www.serebii.net/pokedex-xy/' + suffix
+            url = 'http://www.serebii.net/pokedex-swsh/' + name
+            # cleanup un-allowed characters
+            # e'
+            # nidoran-f
+            # nidoran-m
+            # mr. mime
+            url = url.replace('&eacute;', '\u00E9').\
+                  replace('\u00e9', 'e').\
+                  replace('\u2640', 'f').\
+                  replace('\u2642', 'm').\
+                  replace(' ', '')         
+            print('Fetching \'%s\' to \'%s\'' % (url, path))
+            try:
+                data = urllib.request.urlopen(url)
+                out = open(path, 'wb')
+                out.write(data.read().decode('ISO-8859-1').replace('&eacute;', '\u00E9').encode('utf-8'))
+                print('Using newly-fetched file \'%s\'' % path)
+            except HTTPError as e:
+                print("Unable to read url %s" % url)
+                will_parse = False
+                
+        else:
+            print('Using already-fetched file \'%s\'' % path)
+            pass
         
-        # parser.pokemon.color = colors[parser.pokemon.national_dex_number]
-        # parser.pokemon.body_style = bodyStyles[parser.pokemon.national_dex_number]
-        # parser.pokemon.base_exp_yield = baseExpYields[parser.pokemon.national_dex_number]
-    
-        print('Done parsing \'%s\'' % path)
-    
-        return parser.pokemon
+        if will_parse:
+            source = open(path, 'r', encoding='utf8')
+            parser = PokemonParser(source)
+            parser.parse(name)
+            source.close()
+            
+            # parser.pokemon.color = colors[parser.pokemon.national_dex_number]
+            # parser.pokemon.body_style = bodyStyles[parser.pokemon.national_dex_number]
+            # parser.pokemon.base_exp_yield = baseExpYields[parser.pokemon.national_dex_number]
+            
+            print('Done parsing \'%s\'' % path)
+            
+            return parser.pokemon
+        else:
+            return None
     else:
         return None

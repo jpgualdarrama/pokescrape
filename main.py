@@ -102,7 +102,7 @@ def writePokemon(out):
     for i in range(1, num_pokemon + 1):
         if i in problematic_pokemon:
             continue
-        
+
         p = parse.GetAndParse(i)
         
         # out.write("""{

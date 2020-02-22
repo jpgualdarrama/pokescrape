@@ -1,4 +1,4 @@
-num_pokemon = 721
+num_pokemon = 890
 
 PkType = {
 	'none': 0,

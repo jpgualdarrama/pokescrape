@@ -55,7 +55,12 @@ class PokemonParser():
 
         for i in range(0, num_dt):
             dt = dextables[i]
-            if self.dtMatches(dt, "Picture", [1], [(1, Tag)], 1):
+            # Eternatus is strange, because it has a second set of tables
+            # on the same webpage for Eternamax Eternatus. Use this check
+            # to ignore those
+            if self.dtMatches(dt, "Eternamax Eternatus", [1], [(1, Tag)], 0):
+                return
+            elif self.dtMatches(dt, "Picture", [1], [(1, Tag)], 1):
                 self.processPictureDexTable(dt)
             elif self.dtMatches(dt, "Name", [1], [(1, Tag)], 1):
                 general_info = self.processGeneralInfoDexTable(dt)
@@ -86,6 +91,8 @@ class PokemonParser():
                 pass
             elif self.dtMatches(dt, "Level Up - Female", [0, 0], [(0, Tag), (0, Tag)], 0):
                 pass
+            elif self.dtMatches(dt, "Level Up - Low Key Form", [0], [(0, Tag)], 0):
+                pass
             elif self.dtMatches(dt, "Technical Machine Attacks", [0, 0], [(0, Tag), (0, Tag)], 1):
                 tm_info = self.processTMMovesDexTable(dt)
             elif self.dtMatches(dt, "Technical Record Attacks", [0, 0], [(0, Tag), (0, Tag)], 1):
@@ -107,6 +114,22 @@ class PokemonParser():
             elif self.dtMatches(dt, "Stats - Galarian " + name, [0], [(0, Tag)], 1):
                 pass
             elif self.dtMatches(dt, "Stats - Alternate Forms", [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Stats - School Form", [0, 1], [(0, Tag), (1, Tag)], 0):
+                pass
+            elif self.dtMatches(dt, "Stats - Dusk Mane " + name, [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Stats - Dawn Wings " + name, [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Stats - NoIce Form", [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Stats - Female", [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Stats - Crowned Sword", [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Stats - Crowned Shield", [0], [(0, Tag)], 1):
+                pass
+            elif self.dtMatches(dt, "Eternamax " + name, [1], [(1, Tag)], 0):
                 pass
             elif self.dtMatches(dt, "Pre-Evolution Only Moves", [0], [(0, Tag)], 0):
                 pass
@@ -187,7 +210,13 @@ class PokemonParser():
             'metric': weight_list[1]
         }
         # > tds[3] - Capture Rate
-        capture_rate = int(tds[3].string)
+        # some pokemon have more than one capture rate, if their capture
+        # rate differs in different games.
+        # TODO: Handle multiple capture rates. For now, just take the first one
+        if tds[3].string is None:
+            capture_rate = int(tds[3].contents[0].string)
+        else:        
+            capture_rate = int(tds[3].string)
         # > tds[4] - Base Egg Steps
         egg_steps = int(tds[4].string.replace(',', ''))
         
